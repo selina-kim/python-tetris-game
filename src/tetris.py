@@ -3,19 +3,14 @@ from pyglet import image
 import random
 import os
 
-'''
-class Figure():
-    def __init__(self):
-        # self.rot = 
-        # self.type =
-'''
+        
 
 # Constants
 #------------------------------------------
 
 WINDOW_X = 900
-WINDOW_Y = 700
-CUBE_LENGTH = 32
+WINDOW_Y = 740
+CUBE_LENGTH = 30
 
 #------------------------------------------
 
@@ -24,7 +19,6 @@ window = pyglet.window.Window(WINDOW_X
                               ,caption='PYTHON TETRIS GAME'
                               # ,resizable=True
                               )
-
 
 
 cubes = image.load('resources/img/cubes.png')
@@ -38,6 +32,13 @@ cubeBlue = cubesSeq[4]
 cubePurple = cubesSeq[5]
 cubeGrey = cubesSeq[6]
 
+class Figure():
+    def __init__(self, type, x=(WINDOW_X/2), y=((WINDOW_Y-22*CUBE_LENGTH)/2 + CUBE_LENGTH), rot=0):
+        self.x = x
+        self.y = y
+        self.type = type
+        self.rot = rot
+    
 
 # Create the grey frame outline for game
 
@@ -47,10 +48,10 @@ def generateFrame(height, batch=None):
     frame = []
     for x in range(6):
         for y in range(height):
-            if (y == 0) | (x == 5) | (y == height-1):
-                xPosLeft = (WINDOW_X//2) - (CUBE_LENGTH * (x + 1))
-                xPosRight = (WINDOW_X//2) + (CUBE_LENGTH * x)
-                yPos = CUBE_LENGTH * y
+            if (y == 0) | (x == 5) & (not (y == height-1)):
+                xPosLeft = (WINDOW_X/2) - (CUBE_LENGTH * (x + 1))
+                xPosRight = (WINDOW_X/2) + (CUBE_LENGTH * x)
+                yPos = (WINDOW_Y - CUBE_LENGTH*height)/2 + CUBE_LENGTH * y
                 # print("block at x=" + str(xPosLeft) + ", y=" + str(yPos) + " and x=" + str(xPosRight) + ", y=" + str(yPos))
                 frame.append(
                     pyglet.sprite.Sprite(img=cubeGrey
@@ -67,6 +68,10 @@ def generateFrame(height, batch=None):
 gameFrame = generateFrame(22, frameBatch)
 
 #------------------------------------------
+
+temp = pyglet.graphics.Batch()
+
+thing1 = pyglet.sprite.Sprite(img=cubeRed, x=WINDOW_X/2, y=WINDOW_Y/2, batch=temp)
 
 pic = image.load('ref/1200px-Typical_Tetris_Game.svg.png')
 pic.anchor_x = pic.width // 2
@@ -87,6 +92,7 @@ def on_draw():
     window.clear()
     picSprite.draw()
     frameBatch.draw()
+    temp.draw()
     label.draw()
 
 
