@@ -22,15 +22,16 @@ window = pyglet.window.Window(WINDOW_X
 
 
 cubes = image.load('resources/img/cubes.png')
-cubesSeq = pyglet.image.ImageGrid(cubes, 1, 7)
+cubesSeq = pyglet.image.ImageGrid(cubes, 1, 8)
 
 cubeRed = cubesSeq[0]
 cubeOrange = cubesSeq[1]
 cubeYellow = cubesSeq[2]
 cubeGreen = cubesSeq[3]
-cubeBlue = cubesSeq[4]
-cubePurple = cubesSeq[5]
-cubeGrey = cubesSeq[6]
+cubeSkyblue = cubesSeq[4]
+cubeBlue = cubesSeq[5]
+cubePurple = cubesSeq[6]
+cubeGrey = cubesSeq[7]
 
 class Figure():
     def __init__(self, type, x=(WINDOW_X/2), y=((WINDOW_Y-22*CUBE_LENGTH)/2 + CUBE_LENGTH), rot=0):
