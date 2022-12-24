@@ -1,5 +1,6 @@
 import pyglet
 from pyglet import image
+from pyglet import font
 import random
 import os
 
@@ -11,6 +12,14 @@ import os
 WINDOW_X = 900
 WINDOW_Y = 740
 CUBE_LENGTH = 30
+
+#------------------------------------------
+
+font.add_file('resources/font/RedHatDisplay-Regular.ttf')
+redHat = font.load('Red Hat Display')
+
+font.add_file('resources/font/RedHatDisplay-Bold.ttf')
+redHatBold = font.load('Red Hat Display', bold=True)
 
 #------------------------------------------
 
@@ -80,18 +89,19 @@ pic.anchor_y = pic.height // 2
 picSprite = pyglet.sprite.Sprite(pic)
 picSprite.opacity = 50
 picSprite.scale = 700 / 2200
-picSprite.position = (window.width//2, window.height//2)
+picSprite.position = (window.width//2, window.height//2, 0)
 
-label = pyglet.text.Label('Score',
-                          font_name='Times New Roman',
-                          font_size=20,
-                          x=window.width//2, y=window.height//2,
-                          anchor_x='center', anchor_y='center')
+label = pyglet.text.Label('LINES CLEARED',
+                          font_name='Red Hat Display',
+                          font_size=16,
+                          x=window.width//2 + (6*CUBE_LENGTH) + 10, y=window.height//2 - (6*CUBE_LENGTH),
+                          anchor_x='left', anchor_y='center')
+                        
 
 @window.event
 def on_draw():
     window.clear()
-    picSprite.draw()
+    # picSprite.draw()
     frameBatch.draw()
     temp.draw()
     label.draw()
