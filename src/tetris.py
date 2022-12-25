@@ -6,7 +6,7 @@ import os
 
 #------------------------------------------
 
-resource.path = ['../resources']
+resource.path = ['../data']
 resource.reindex()
 
 resource.add_font('font/RedHatDisplay-Regular.ttf')

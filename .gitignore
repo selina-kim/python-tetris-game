@@ -1,4 +1,4 @@
 .vscode/
 .DS_Store
-resources/img/misc/
-resources/ref/
+data/img/misc/
+ref/
