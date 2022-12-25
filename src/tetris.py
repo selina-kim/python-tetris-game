@@ -1,25 +1,28 @@
 import pyglet
-from pyglet import image
+from pyglet import resource
 from pyglet import font
 import random
 import os
 
-        
+#------------------------------------------
+
+resource.path = ['../resources']
+resource.reindex()
+
+resource.add_font('font/RedHatDisplay-Regular.ttf')
+redHat = font.load('Red Hat Display')
+
+resource.add_font('font/RedHatDisplay-Bold.ttf')
+redHatBold = font.load('Red Hat Display', bold=True)
+
 
 # Constants
 #------------------------------------------
 
 WINDOW_X = 900
 WINDOW_Y = 740
+BOARD_HEIGHT = 22 # in terms of num of cubes
 CUBE_LENGTH = 30
-
-#------------------------------------------
-
-font.add_file('resources/font/RedHatDisplay-Regular.ttf')
-redHat = font.load('Red Hat Display')
-
-font.add_file('resources/font/RedHatDisplay-Bold.ttf')
-redHatBold = font.load('Red Hat Display', bold=True)
 
 #------------------------------------------
 
@@ -30,7 +33,7 @@ window = pyglet.window.Window(WINDOW_X
                               )
 
 
-cubes = image.load('resources/img/cubes.png')
+cubes = resource.image('img/cubes.png')
 cubesSeq = pyglet.image.ImageGrid(cubes, 1, 8)
 
 cubeRed = cubesSeq[0]
@@ -43,7 +46,7 @@ cubePurple = cubesSeq[6]
 cubeGrey = cubesSeq[7]
 
 class Figure():
-    def __init__(self, type, x=(WINDOW_X/2), y=((WINDOW_Y-22*CUBE_LENGTH)/2 + CUBE_LENGTH), rot=0):
+    def __init__(self, type, x=(WINDOW_X/2), y=((WINDOW_Y-BOARD_HEIGHT*CUBE_LENGTH)/2 + CUBE_LENGTH), rot=0):
         self.x = x
         self.y = y
         self.type = type
@@ -75,7 +78,7 @@ def generateFrame(height, batch=None):
                                         , batch=batch))
     return frame
 
-gameFrame = generateFrame(22, frameBatch)
+gameFrame = generateFrame(BOARD_HEIGHT, frameBatch)
 
 #------------------------------------------
 
@@ -83,7 +86,7 @@ temp = pyglet.graphics.Batch()
 
 thing1 = pyglet.sprite.Sprite(img=cubeRed, x=WINDOW_X/2, y=WINDOW_Y/2, batch=temp)
 
-pic = image.load('ref/1200px-Typical_Tetris_Game.svg.png')
+pic = resource.image('ref/1200px-Typical_Tetris_Game.svg.png')
 pic.anchor_x = pic.width // 2
 pic.anchor_y = pic.height // 2
 picSprite = pyglet.sprite.Sprite(pic)
@@ -91,11 +94,17 @@ picSprite.opacity = 50
 picSprite.scale = 700 / 2200
 picSprite.position = (window.width//2, window.height//2, 0)
 
-label = pyglet.text.Label('LINES CLEARED',
+textLinesCount = pyglet.text.Label('LINES CLEARED',
                           font_name='Red Hat Display',
                           font_size=16,
-                          x=window.width//2 + (6*CUBE_LENGTH) + 10, y=window.height//2 - (6*CUBE_LENGTH),
-                          anchor_x='left', anchor_y='center')
+                          x=window.width//2 - (6*CUBE_LENGTH) - 10, y=BOARD_HEIGHT*CUBE_LENGTH,
+                          anchor_x='right', anchor_y='center')
+
+textTimeCount = pyglet.text.Label('TIME ELAPSED',
+                          font_name='Red Hat Display',
+                          font_size=16,
+                          x=window.width//2 - (6*CUBE_LENGTH) - 10, y=BOARD_HEIGHT*CUBE_LENGTH - 100,
+                          anchor_x='right', anchor_y='center')
                         
 
 @window.event
@@ -104,7 +113,8 @@ def on_draw():
     # picSprite.draw()
     frameBatch.draw()
     temp.draw()
-    label.draw()
+    textLinesCount.draw()
+    textTimeCount.draw()
 
 
 pyglet.app.run()
