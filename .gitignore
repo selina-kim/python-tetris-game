@@ -1,4 +1,5 @@
 .vscode/
 .DS_Store
-data/img/misc/
+assets/img/misc/
 ref/
+assets/font/other-fonts
