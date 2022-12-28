@@ -169,15 +169,14 @@ def key_old( k ):
 
 class GameScreen(pyglet.window.Window):
 
-    tetris = Tetris()
-
     def __init__(self, height, width):
         super().__init__(
             height
             , width
             , caption='PYTHON TETRIS GAME'
             , resizable=True)
-        self.line_count = 0
+        self.tetris = Tetris()
+        self.line_count = self.tetris.lines_count
         self.time = 0
         self.max_time = 0
         self.batch = pyglet.graphics.Batch()
@@ -235,9 +234,7 @@ class GameScreen(pyglet.window.Window):
 
         global lines_count_draw
         lcol = lines_count_label
-        if lines_count_draw:
-            self.line_count = self.tetris.lines_count
-            lines_count_draw = False
+        self.line_count = self.tetris.lines_count
         lcol.text = str(self.line_count)
         lcol.x=self.width//2 - (6*CUBE_LENGTH) - 10
         lcol.y=(self.height - (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 + (120*(self.height/WINDOW_Y))
@@ -347,7 +344,6 @@ def move_objects(dt, screen):
             screen.tetris.move(1)
 
         if key( key_rotate_clock ) and not key_old( key_rotate_clock ):
-            print("rotate clock")
             screen.tetris.rotate('clock')
 
         if key( key_rotate_cntrclock ) and not key_old( key_rotate_cntrclock ):
@@ -358,10 +354,7 @@ def move_objects(dt, screen):
 
         if key( key_hard_drop ) and not key_old( key_hard_drop ):
             screen.tetris.hard_drop()
-    
-        if screen.tetris.is_freeze:
-            global lines_count_draw
-            lines_count_draw = True
+            print(screen.tetris.lines_count)
 
     key_state_old = key_state.copy()
 

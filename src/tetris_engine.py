@@ -47,7 +47,6 @@ class Tetris:
     spoiler = []
     hold_piece = None
     attempt_hold = False
-    is_freeze = False
 
     def __init__(self):
         self.height = Game_Config.BOARD_HEIGHT
@@ -84,7 +83,6 @@ class Tetris:
         return False
 
     def freeze(self):
-        self.is_freeze = True
         for i in range(4):
             for j in range(4):
                 if i * 4 + j in self.figure.matrix():
@@ -93,7 +91,6 @@ class Tetris:
         self.new_figure()
         if self.intersects():
             self.state = 'gameover'
-        self.is_freeze = False
 
     def clear_lines(self):
         lines = 0
