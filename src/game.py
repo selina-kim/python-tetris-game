@@ -135,10 +135,8 @@ cube_image = {
 def generate_board(width, height, screen_x, screen_y, field, figure, batch=None):
     board = []
     figure_coord = []
-    print(str(figure.matrix()))
     for n in figure.matrix():
         figure_coord.append((figure.x + n % 4, height - 1 - (figure.y + n // 4)))
-    print(figure_coord)
     for row in range(height):
         for i in range(width):
             if (i, row) in figure_coord:
@@ -149,8 +147,9 @@ def generate_board(width, height, screen_x, screen_y, field, figure, batch=None)
                                         , x=xPos
                                         , y=yPos
                                         , batch=batch))
-            if field[row][i] != '0':
-                block = cube_image[field[row][i]]
+            symbol = field[height - 1 - row][i]
+            if symbol != '0':
+                block = cube_image[symbol]
                 yPos = (screen_y - CUBE_LENGTH*height)/2 + CUBE_LENGTH * row
                 xPos = (screen_x - CUBE_LENGTH*width)/2 + CUBE_LENGTH * i
                 board.append(pyglet.sprite.Sprite(img=block

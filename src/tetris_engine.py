@@ -52,7 +52,7 @@ class Tetris:
     def __init__(self):
         self.height = Game_Config.BOARD_HEIGHT
         self.width = Game_Config.BOARD_WIDTH
-        self.field= [ ['0'] * self.width for i in range(self.height+3) ]
+        self.field= [ ['0'] * self.width for i in range(self.height) ]
         self.time_count = 0
         self.lines_count = 0
         self.state = 'start'
@@ -79,7 +79,7 @@ class Tetris:
                     if i + self.figure.y > self.height - 1 or \
                             j + self.figure.x > self.width - 1 or \
                             j + self.figure.x < 0 or \
-                            self.field[self.height - 1 - (i + self.figure.y)][j + self.figure.x] != '0':
+                            self.field[i + self.figure.y][j + self.figure.x] != '0':
                         return True
         return False
 
@@ -88,7 +88,7 @@ class Tetris:
         for i in range(4):
             for j in range(4):
                 if i * 4 + j in self.figure.matrix():
-                    self.field[self.height - 1 - (i + self.figure.y)][j + self.figure.x] = self.figure.type
+                    self.field[i + self.figure.y][j + self.figure.x] = self.figure.type
         self.clear_lines()
         self.new_figure()
         if self.intersects():
@@ -97,16 +97,16 @@ class Tetris:
 
     def clear_lines(self):
         lines = 0
-        for i in range(1, self.height):
-            zeros = 0
+        for i in range(0, self.height):
+            blanks = 0
             for j in range(self.width):
                 if self.field[i][j] == '0':
-                    zeros += 1
-            if zeros == 0:
+                    blanks += 1
+            if blanks == 0:
                 lines += 1
-                for i1 in range(i, 1, -1):
+                for a in range(i, 0, -1):
                     for j in range(self.width):
-                        self.field[i1][j] = self.field[i1 - 1][j]
+                        self.field[a][j] = self.field[a - 1][j]
         self.lines_count += lines
 
     def hard_drop(self):
