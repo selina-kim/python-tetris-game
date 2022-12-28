@@ -1,11 +1,14 @@
 import pyglet
 from pyglet.window.key import *
+from pyglet.gui.widgets import WidgetBase
 from pyglet import resource
 from pyglet import font
 
 import os
 from tetris_engine import Game_Config
 from tetris_engine import Tetris
+
+import keyboard_input
 
 # Constants ----------------------
 WINDOW_X = 900
@@ -50,8 +53,22 @@ cube_grey = cubes_seq[7]
 
 pause = False
 lines_count_draw = False
-fps_draw = True
-resize = False
+dev_mode = False
+fps_draw = False
+key_draw = False
+current_figure_draw = False
+current_orientation_draw = False
+
+key_move_left = L
+key_move_right = APOSTROPHE
+key_rotate_clock = P
+key_rotate_cntrclock = O
+key_move_down = SEMICOLON
+key_hard_drop = SPACE
+
+start_interval = end_interval = 0
+interval = 2
+
 
 lines_cleared_label = pyglet.text.Label(
                           font_name=main_font,
@@ -79,12 +96,15 @@ state_label = pyglet.text.Label(
                         anchor_x='center', anchor_y='center')
 
 fps_label = pyglet.text.Label(anchor_x = 'left', anchor_y='top')
+key_label = pyglet.text.Label(anchor_x = 'left', anchor_y='top')
+current_figure_label = pyglet.text.Label(anchor_x = 'right', anchor_y='top')
+current_orientation_label = pyglet.text.Label(anchor_x = 'right', anchor_y='top')
 
 def generate_frame(width, height, screen_x, screen_y, batch=None):
     frame = []
     height += 2
     width += 2
-    for x in range(6):
+    for x in range(width//2):
         for y in range(height):
             if (y == 0) | (x == width//2-1) & (not (y == height-1)):
                 x_pos_left = (screen_x/2) - (CUBE_LENGTH * (x + 1))
@@ -101,6 +121,43 @@ def generate_frame(width, height, screen_x, screen_y, batch=None):
                                         , y=y_pos
                                         , batch=batch))
     return frame
+
+cube_image = {
+    'I': cube_skyblue, 
+    'Z': cube_red, 
+    'S': cube_green,
+    'J': cube_blue,
+    'L': cube_orange,
+    'T': cube_purple,
+    'O': cube_yellow
+}
+
+def generate_board(width, height, screen_x, screen_y, field, figure, batch=None):
+    board = []
+    figure_coord = []
+    print(str(figure.matrix()))
+    for n in figure.matrix():
+        figure_coord.append((figure.x + n % 4, height - 1 - (figure.y + n // 4)))
+    print(figure_coord)
+    for row in range(height):
+        for i in range(width):
+            if (i, row) in figure_coord:
+                block = cube_image[figure.type]
+                yPos = (screen_y - CUBE_LENGTH*height)/2 + CUBE_LENGTH * row
+                xPos = (screen_x - CUBE_LENGTH*width)/2 + CUBE_LENGTH * i
+                board.append(pyglet.sprite.Sprite(img=block
+                                        , x=xPos
+                                        , y=yPos
+                                        , batch=batch))
+            if field[row][i] != '0':
+                block = cube_image[field[row][i]]
+                yPos = (screen_y - CUBE_LENGTH*height)/2 + CUBE_LENGTH * row
+                xPos = (screen_x - CUBE_LENGTH*width)/2 + CUBE_LENGTH * i
+                board.append(pyglet.sprite.Sprite(img=block
+                                        , x=xPos
+                                        , y=yPos
+                                        , batch=batch))
+    return board
 
 key_state = key_state_old = set()
 
@@ -133,7 +190,17 @@ class GameScreen(pyglet.window.Window):
             , Game_Config.BOARD_HEIGHT
             , self.width
             , self.height
-            , self.batch)
+            , self.batch
+        )
+        self.game_board = generate_board(
+            Game_Config.BOARD_WIDTH
+            , Game_Config.BOARD_HEIGHT
+            , self.width
+            , self.height
+            , self.tetris.field
+            , self.tetris.figure
+            , self.batch
+        )
 
     def on_draw(self):
         self.clear()
@@ -143,6 +210,15 @@ class GameScreen(pyglet.window.Window):
             , self.width
             , self.height
             , self.batch)
+        self.game_board = generate_board(
+            Game_Config.BOARD_WIDTH
+            , Game_Config.BOARD_HEIGHT
+            , self.width
+            , self.height
+            , self.tetris.field
+            , self.tetris.figure
+            , self.batch
+        )
 
         global lines_cleared_label
         lcl = lines_cleared_label
@@ -168,22 +244,22 @@ class GameScreen(pyglet.window.Window):
         lcol.y=(self.height - (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 + (120*(self.height/WINDOW_Y))
         lcol.draw()
 
-        if self.tetris.state == 'start':
-            self.max_time = self.time
-        else:
+        if self.tetris.state == 'gameover':
             sl = state_label
             sl.text = 'GAME OVER'
             sl.x = self.width//2
             sl.y = self.height//2
             sl.draw()
-
-        global pause
-        if pause:
-            sl = state_label
-            sl.text = 'PAUSE'
-            sl.x = self.width//2
-            sl.y = self.height//2
-            sl.draw()
+        else:
+            if self.tetris.state == 'start':
+                self.max_time = self.time
+            global pause
+            if pause:
+                sl = state_label
+                sl.text = 'PAUSE'
+                sl.x = self.width//2
+                sl.y = self.height//2
+                sl.draw()
         tl = time_label
         tl.x=self.width//2 - (6*CUBE_LENGTH) - 10
         tl.y=(self.height - (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 + (40*(self.height/WINDOW_Y))
@@ -193,12 +269,45 @@ class GameScreen(pyglet.window.Window):
         tl.text = f'{hr:02}:{min:02}:{sec:02}'
         tl.batch = self.batch
 
+        if dev_mode:
+            global fps_draw, key_draw, current_figure_draw
+            fps_draw = True
+            key_draw = True
+            current_figure_draw = True
+            current_orientation_draw = True
+
+        if current_figure_draw:
+            cfl = current_figure_label
+            cfl.text = f'{self.tetris.figure.type}'
+            cfl.font_size = 20
+            cfl.bold = True
+            cfl.x, cfl.y = self.width-10, self.height-5
+            cfl.batch = self.batch
+
+        if current_orientation_draw:
+            col = current_orientation_label
+            col.text = f'{self.tetris.figure.matrix()}'
+            col.font_size = 20
+            col.bold = True
+            col.x, col.y = self.width-10, self.height-30
+            col.batch = self.batch
+
         if fps_draw:
             fl = fps_label
             fl.text = f'{self.fps:.1f} FPS'
             fl.font_size = 10
             fl.x, fl.y = 5, self.height-5
             fl.batch = self.batch
+
+        if key_draw:
+            kl = key_label
+            if len(key_state) > 0:
+                kl.text = f'Key: {keyboard_input.keys[next(iter(key_state))]}'
+            else:
+                kl.text = f'Key:'
+            kl.font_size = 10
+            kl.x, kl.y = 5, self.height-20
+            kl.batch = self.batch
 
         self.batch.draw()
 
@@ -217,38 +326,49 @@ class GameScreen(pyglet.window.Window):
 
 def move_objects(dt, screen):
 
-    global key_state, key_state_old, pause
+    global key_state, key_state_old, pause, key_move_left, key_move_right, key_rotate_clock, key_rotate_cntrclock, key_move_down, key_hard_drop
+    global start_interval, end_interval, interval
 
     if key( ESCAPE ) and not key_old( ESCAPE ):
         pause = not pause
 
-    if key( LEFT ) and not key_old( LEFT ):
-        print("pressed left")
-        screen.tetris.move(-1)
+    end_interval = screen.time
 
-    if key( RIGHT ) and not key_old( RIGHT ):
-        print("pressed right")
-        screen.tetris.move(1)
+    if screen.tetris.state == 'start':
 
-    if key( UP ) and not key_old( UP ):
-        print("pressed up")
-        screen.tetris.rotate('clock')
+        if end_interval-start_interval >= 2:
+            print(f"{end_interval-start_interval:.2f} - descend piece")
+            screen.tetris.descend()
+            start_interval = end_interval
 
-    if key( DOWN ) and not key_old( DOWN ):
-        print("pressed down")
-        screen.tetris.descend()
+        if key( key_move_left ) and not key_old( key_move_left ):
+            screen.tetris.move(-1)
 
-    if key( SPACE ) and not key_old( SPACE ):
-        print("pressed space bar")
-        screen.tetris.hard_drop()
+        if key( key_move_right ) and not key_old( key_move_right ):
+            screen.tetris.move(1)
+
+        if key( key_rotate_clock ) and not key_old( key_rotate_clock ):
+            print("rotate clock")
+            screen.tetris.rotate('clock')
+
+        if key( key_rotate_cntrclock ) and not key_old( key_rotate_cntrclock ):
+            screen.tetris.rotate('counter')
+
+        if key( key_move_down ) and not key_old( key_move_down ):
+            screen.tetris.descend()
+
+        if key( key_hard_drop ) and not key_old( key_hard_drop ):
+            screen.tetris.hard_drop()
     
-    if screen.tetris.is_freeze:
-        global lines_count_draw
-        lines_count_draw = True
+        if screen.tetris.is_freeze:
+            global lines_count_draw
+            lines_count_draw = True
 
     key_state_old = key_state.copy()
 
 def run(h, w):
+    global dev_mode
+    dev_mode = True
     screen = GameScreen(h, w)
     pyglet.clock.schedule_interval(screen.update, 1/60)
     pyglet.clock.schedule(move_objects, screen)

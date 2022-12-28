@@ -11,24 +11,29 @@ class Game_Config:
 
 class Figure:
 
+    # 0  1  2  3
+    # 4  5  6  7
+    # 8  9  10 11
+    # 12 13 14 15
+
     types = {
         'I' : [[4, 5, 6, 7], [1, 5, 9, 13]],
         'Z' : [[4, 5, 9, 10], [2, 6, 5, 9]],
         'S' : [[6, 7, 9, 10], [1, 5, 6, 10]],
-        'J' : [[0, 4, 5, 6], [1, 5, 9, 8], [4, 5, 6, 10], [1, 2, 5, 9]],
-        'L' : [[3, 5, 6, 7], [1, 2, 6, 10], [5, 6, 7, 9], [2, 6, 10, 11]],
-        'T' : [[1, 4, 5, 6], [1, 4, 5, 9], [4, 5, 6, 9], [1, 5, 6, 9]],
+        'J' : [[0, 4, 5, 6], [1, 2, 5, 9], [4, 5, 6, 10], [1, 5, 9, 8]],
+        'L' : [[3, 5, 6, 7], [2, 6, 10, 11], [5, 6, 7, 9], [1, 2, 6, 10]],
+        'T' : [[1, 4, 5, 6], [1, 5, 6, 9], [4, 5, 6, 9], [1, 4, 5, 9]],
         'O' : [[1, 2, 5, 6]]
     }
 
-    def __init__(self, type, x=Game_Config.BOARD_WIDTH//2, y=Game_Config.BOARD_HEIGHT-1, rot=0):
+    def __init__(self, type, x=Game_Config.BOARD_WIDTH//2, y=0, rot=0):
         self.x = x
         self.y = y
         self.type = type
         self.rot = rot
 
     def rotate_clock(self):
-        self.rot = (self.rot + 1) % len(self.types[self.type])
+        self.rot = (len(self.types[self.type]) + self.rot + 1) % len(self.types[self.type])
 
     def rotate_cntr_clock(self):
         self.rot = (self.rot - 1) % len(self.types[self.type])
@@ -47,7 +52,7 @@ class Tetris:
     def __init__(self):
         self.height = Game_Config.BOARD_HEIGHT
         self.width = Game_Config.BOARD_WIDTH
-        self.field= [ ['0'] * self.width for i in range(self.height) ]
+        self.field= [ ['0'] * self.width for i in range(self.height+3) ]
         self.time_count = 0
         self.lines_count = 0
         self.state = 'start'
@@ -74,9 +79,21 @@ class Tetris:
                     if i + self.figure.y > self.height - 1 or \
                             j + self.figure.x > self.width - 1 or \
                             j + self.figure.x < 0 or \
-                            self.field[i + self.figure.y][j + self.figure.x] != '0':
+                            self.field[self.height - 1 - (i + self.figure.y)][j + self.figure.x] != '0':
                         return True
         return False
+
+    def freeze(self):
+        self.is_freeze = True
+        for i in range(4):
+            for j in range(4):
+                if i * 4 + j in self.figure.matrix():
+                    self.field[self.height - 1 - (i + self.figure.y)][j + self.figure.x] = self.figure.type
+        self.clear_lines()
+        self.new_figure()
+        if self.intersects():
+            self.state = 'gameover'
+        self.is_freeze = False
 
     def clear_lines(self):
         lines = 0
@@ -94,32 +111,15 @@ class Tetris:
 
     def hard_drop(self):
         while not self.intersects():
-            self.figure.y -= 1
-        self.figure.y += 1
+            self.figure.y += 1
+        self.figure.y -= 1
         self.freeze()
 
     def descend(self):
-        self.figure.y -= 1
+        self.figure.y += 1
         if self.intersects():
-            self.figure.y += 1
+            self.figure.y -= 1
             self.freeze()
-
-    def freeze(self):
-        self.is_freeze = True
-        if self.figure.y > 19:
-            self.state = 'gameover'
-        else:
-            for i in range(4):
-                for j in range(4):
-                    if i * 4 + j in self.figure.matrix():
-                        print(i + self.figure.y)
-                        print(j + self.figure.x)
-                        self.field[i + self.figure.y][j + self.figure.x] = self.figure.type
-            self.clear_lines()
-            self.new_figure()
-            if self.intersects():
-                self.state = 'gameover'
-        self.is_freeze = False
 
     def move(self, dx):
         old_x = self.figure.x
@@ -130,9 +130,9 @@ class Tetris:
     def rotate(self, dir):
         old_rotation = self.figure.rot
         if dir == 'clock':
-                self.figure.rotate_clock
+            self.figure.rotate_clock()
         else:
-            self.figure.rotate_cntr_clock
+            self.figure.rotate_cntr_clock()
         if self.intersects():
             self.figure.rot = old_rotation
 
