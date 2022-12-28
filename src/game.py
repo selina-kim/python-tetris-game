@@ -149,14 +149,14 @@ class GameScreen(pyglet.window.Window):
         lcl.text = 'LINES CLEARED'
         lcl.x=self.width/2 - ((Game_Config.BOARD_WIDTH+2)*CUBE_LENGTH)/2 - 10
         lcl.y=(self.height - (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 + (150*(self.height/WINDOW_Y))  #(Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH - 480
-        lcl.batch = self.batch
+        lcl.draw()
 
         global time_elapsed_label
         tel = time_elapsed_label
         tel.text = 'TIME ELAPSED'
         tel.x=self.width//2 - (6*CUBE_LENGTH) - 10
         tel.y=(self.height - (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 + (70*(self.height/WINDOW_Y))
-        tel.batch = self.batch
+        tel.draw()
 
         global lines_count_draw
         lcol = lines_count_label
@@ -166,7 +166,7 @@ class GameScreen(pyglet.window.Window):
         lcol.text = str(self.line_count)
         lcol.x=self.width//2 - (6*CUBE_LENGTH) - 10
         lcol.y=(self.height - (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 + (120*(self.height/WINDOW_Y))
-        lcol.batch = self.batch
+        lcol.draw()
 
         if self.tetris.state == 'start':
             self.max_time = self.time
@@ -175,7 +175,7 @@ class GameScreen(pyglet.window.Window):
             sl.text = 'GAME OVER'
             sl.x = self.width//2
             sl.y = self.height//2
-            sl.batch = self.batch
+            sl.draw()
 
         global pause
         if pause:
@@ -183,7 +183,7 @@ class GameScreen(pyglet.window.Window):
             sl.text = 'PAUSE'
             sl.x = self.width//2
             sl.y = self.height//2
-            sl.batch = self.batch
+            sl.draw()
         tl = time_label
         tl.x=self.width//2 - (6*CUBE_LENGTH) - 10
         tl.y=(self.height - (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 + (40*(self.height/WINDOW_Y))
