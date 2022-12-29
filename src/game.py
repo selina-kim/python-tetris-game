@@ -66,6 +66,7 @@ key_rotate_cntrclock = O
 key_move_down = SEMICOLON
 key_hard_drop = SPACE
 key_hold = LSHIFT
+key_restart = RETURN
 
 start_interval = end_interval = 0
 start_increase = end_increase = 0
@@ -329,10 +330,16 @@ class GameScreen(pyglet.window.Window):
     def on_key_release(self, symbol, modifiers):
         key_state.discard( symbol )
 
+    def restart(self):
+        self.tetris = Tetris()
+        self.time = self.max_time = 0
+        self.line_count = self.tetris.lines_count
+
+
 
 def move_objects(dt, screen):
 
-    global key_state, key_state_old, pause, key_move_left, key_move_right, key_rotate_clock, key_rotate_cntrclock, key_move_down, key_hard_drop
+    global key_state, key_state_old, pause, key_move_left, key_move_right, key_rotate_clock, key_rotate_cntrclock, key_move_down, key_hard_drop, key_restart
     global start_interval, end_interval, interval, start_increase, end_increase
 
     if key( ESCAPE ) and not key_old( ESCAPE ):
@@ -376,6 +383,9 @@ def move_objects(dt, screen):
             # print(f"{end_interval-start_interval:.2f} - descend piece")
             screen.tetris.descend()
             start_interval = end_interval
+
+    if key( key_restart ) and not key_old( key_restart ):
+        screen.restart()
 
     key_state_old = key_state.copy()
 
