@@ -250,31 +250,6 @@ class GameScreen(pyglet.window.Window):
         lcol.y=(self.height - (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 + (120*(self.height/WINDOW_Y))
         lcol.draw()
 
-        if self.tetris.state == 'gameover':
-            sl = state_label
-            sl.text = 'GAME OVER'
-            sl.x = self.width//2
-            sl.y = self.height//2
-            sl.draw()
-        else:
-            if self.tetris.state == 'start':
-                self.max_time = self.time
-            global pause
-            if pause:
-                sl = state_label
-                sl.text = 'PAUSE'
-                sl.x = self.width//2
-                sl.y = self.height//2
-                sl.draw()
-        tl = time_label
-        tl.x=self.width//2 - (6*CUBE_LENGTH) - 10
-        tl.y=(self.height - (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 + (40*(self.height/WINDOW_Y))
-        hr = int(self.max_time // 3600)
-        min = int((self.max_time % 3600) // 60)
-        sec = int((self.max_time % 3600) % 60)
-        tl.text = f'{hr:02}:{min:02}:{sec:02}'
-        tl.batch = self.batch
-
         if dev_mode:
             global fps_draw, key_draw, current_figure_draw
             fps_draw = True
@@ -317,6 +292,31 @@ class GameScreen(pyglet.window.Window):
 
         self.batch.draw()
 
+        if self.tetris.state == 'gameover':
+            sl = state_label
+            sl.text = 'GAME OVER'
+            sl.x = self.width//2
+            sl.y = self.height//2
+            sl.draw()
+        else:
+            if self.tetris.state == 'start':
+                self.max_time = self.time
+            global pause
+            if pause:
+                sl = state_label
+                sl.text = 'PAUSE'
+                sl.x = self.width//2
+                sl.y = self.height//2
+                sl.draw()
+        tl = time_label
+        tl.x=self.width//2 - (6*CUBE_LENGTH) - 10
+        tl.y=(self.height - (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 + (40*(self.height/WINDOW_Y))
+        hr = int(self.max_time // 3600)
+        min = int((self.max_time % 3600) // 60)
+        sec = int((self.max_time % 3600) % 60)
+        tl.text = f'{hr:02}:{min:02}:{sec:02}'
+        tl.batch = self.batch
+
     def update(self, dt):
         global pause
         if pause == False:
@@ -340,7 +340,7 @@ def move_objects(dt, screen):
 
     end_interval = end_increase = screen.time
 
-    if screen.tetris.state == 'start':
+    if screen.tetris.state == 'start' and not pause:
 
         global increase_interval
 
