@@ -1,4 +1,4 @@
 import game
 
 if __name__ == "__main__":
-    game.run(900, 740)
+    game.run()

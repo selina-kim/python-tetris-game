@@ -20,8 +20,8 @@ class Figure:
         'I' : [[4, 5, 6, 7], [1, 5, 9, 13]],
         'Z' : [[4, 5, 9, 10], [2, 6, 5, 9]],
         'S' : [[6, 7, 9, 10], [1, 5, 6, 10]],
-        'J' : [[0, 4, 5, 6], [1, 2, 5, 9], [4, 5, 6, 10], [1, 5, 9, 8]],
-        'L' : [[3, 5, 6, 7], [2, 6, 10, 11], [5, 6, 7, 9], [1, 2, 6, 10]],
+        'J' : [[1, 5, 6, 7], [1, 2, 5, 9], [5, 6, 7, 11], [3, 7, 11, 10]],
+        'L' : [[7, 9, 10, 11], [6, 10, 14, 15], [5, 6, 7, 9], [5, 6, 10, 14]],
         'T' : [[1, 4, 5, 6], [1, 5, 6, 9], [4, 5, 6, 9], [1, 4, 5, 9]],
         'O' : [[1, 2, 5, 6]]
     }
@@ -40,6 +40,20 @@ class Figure:
 
     def matrix(self):
         return self.types[self.type][self.rot]
+
+    def left_edge(self):
+        left_most = 3
+        for n in self.matrix():
+            if n%4 < left_most:
+                left_most = n%4
+        return left_most
+
+    def right_edge(self):
+        right_most = 0
+        for n in self.matrix():
+            if n%4 > right_most:
+                right_most = n%4
+        return right_most
 
 
 class Tetris:
@@ -88,6 +102,7 @@ class Tetris:
                 if i * 4 + j in self.figure.matrix():
                     self.field[i + self.figure.y][j + self.figure.x] = self.figure.type
         self.clear_lines()
+        self.attempt_hold = False
         self.new_figure()
         if self.intersects():
             self.state = 'gameover'
@@ -105,6 +120,13 @@ class Tetris:
                     for j in range(self.width):
                         self.field[a][j] = self.field[a - 1][j]
         self.lines_count += lines
+
+    def horizontal_edge_guard(self):
+        while self.figure.left_edge()+self.figure.x < 0:
+                self.move(1)
+        while self.figure.right_edge()+self.figure.x >= self.width:
+            self.move(-1)
+
 
     def hard_drop(self):
         while not self.intersects():
@@ -130,18 +152,21 @@ class Tetris:
             self.figure.rotate_clock()
         else:
             self.figure.rotate_cntr_clock()
+        self.horizontal_edge_guard()
         if self.intersects():
             self.figure.rot = old_rotation
+            self.horizontal_edge_guard()
 
     def hold(self):
-        self.attempt_hold = True
-        
-        if self.hold_piece == None:
-            self.hold_piece = self.figure
-            self.new_figure()
-        else:
+        if self.attempt_hold == False:
             current_pos_x = self.figure.x
-            old_hold_piece = self.hold_piece
-            self.hold_piece = self.figure
-            self.figure = old_hold_piece
-            self.figure.x, self.figure.y = current_pos_x, Game_Config.BOARD_HEIGHT-1
+            if self.hold_piece == None:
+                self.hold_piece = self.figure
+                self.new_figure()
+            else:
+                old_hold_piece = self.hold_piece
+                self.hold_piece = self.figure
+                self.figure = old_hold_piece
+            self.figure.x, self.figure.y = current_pos_x, 0
+            self.horizontal_edge_guard()
+            self.attempt_hold = True

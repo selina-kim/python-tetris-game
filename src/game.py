@@ -11,11 +11,11 @@ from tetris_engine import Tetris
 import keyboard_input
 
 # Constants ----------------------
+CUBE_LENGTH = 30
 WINDOW_X = 900
 WINDOW_Y = 740
-WINDOW_MIN_Y = 630
-WINDOW_MIN_X = 360
-CUBE_LENGTH = 30
+WINDOW_MIN_Y = CUBE_LENGTH*22
+WINDOW_MIN_X = CUBE_LENGTH*12
 #------------------------------------------
 
 workingDir = os.path.dirname( os.path.realpath( __file__ ) )
@@ -65,6 +65,7 @@ key_rotate_clock = P
 key_rotate_cntrclock = O
 key_move_down = SEMICOLON
 key_hard_drop = SPACE
+key_hold = LSHIFT
 
 start_interval = end_interval = 0
 interval = 2
@@ -337,6 +338,9 @@ def move_objects(dt, screen):
             screen.tetris.descend()
             start_interval = end_interval
 
+        if key( key_hold ) and not key_old( key_hold ):
+            screen.tetris.hold()
+
         if key( key_move_left ) and not key_old( key_move_left ):
             screen.tetris.move(-1)
 
@@ -354,14 +358,13 @@ def move_objects(dt, screen):
 
         if key( key_hard_drop ) and not key_old( key_hard_drop ):
             screen.tetris.hard_drop()
-            print(screen.tetris.lines_count)
 
     key_state_old = key_state.copy()
 
-def run(h, w):
+def run():
     global dev_mode
     dev_mode = True
-    screen = GameScreen(h, w)
+    screen = GameScreen(WINDOW_Y, WINDOW_X)
     pyglet.clock.schedule_interval(screen.update, 1/60)
     pyglet.clock.schedule(move_objects, screen)
     pyglet.app.run()
