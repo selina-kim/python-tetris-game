@@ -6,6 +6,7 @@ import random
 class Game_Config:
     BOARD_HEIGHT = 20 # in terms of num of cubes
     BOARD_WIDTH = 10
+    BLANK = ' '
 
 #------------------------------------------
 
@@ -17,9 +18,9 @@ class Figure:
     # 12 13 14 15
 
     types = {
-        'I' : [[4, 5, 6, 7], [1, 5, 9, 13]],
-        'Z' : [[4, 5, 9, 10], [2, 6, 5, 9]],
-        'S' : [[6, 7, 9, 10], [1, 5, 6, 10]],
+        'I' : [[4, 5, 6, 7], [2, 6, 10, 14], [8, 9, 10, 11], [1, 5, 9, 13]],
+        'Z' : [[4, 5, 9, 10], [2, 6, 5, 9], [0, 1, 5, 6], [1, 5, 4, 8]],
+        'S' : [[6, 7, 9, 10], [2, 6, 7, 11], [2, 3, 5, 6], [1, 5, 6, 10]],
         'J' : [[1, 5, 6, 7], [1, 2, 5, 9], [5, 6, 7, 11], [3, 7, 11, 10]],
         'L' : [[7, 9, 10, 11], [6, 10, 14, 15], [5, 6, 7, 9], [5, 6, 10, 14]],
         'T' : [[1, 4, 5, 6], [1, 5, 6, 9], [4, 5, 6, 9], [1, 4, 5, 9]],
@@ -31,6 +32,7 @@ class Figure:
         self.y = y
         self.type = type
         self.rot = rot
+        self.set_to_horizontal_center()
 
     def rotate_clock(self):
         self.rot = (len(self.types[self.type]) + self.rot + 1) % len(self.types[self.type])
@@ -55,6 +57,27 @@ class Figure:
                 right_most = n%4
         return right_most
 
+    def top_edge(self):
+        top_most = 3
+        for n in self.matrix():
+            if n//4 > top_most:
+                top_most = n//4
+        return top_most
+
+    def bottom_edge(self):
+        bottom_most = 0
+        for n in self.matrix():
+            if n//4 < bottom_most:
+                bottom_most = n//4
+        return bottom_most
+
+    def horizontal_center(self):
+        return (self.right_edge() + self.left_edge())//2
+
+    def set_to_horizontal_center(self):
+        while self.horizontal_center() + self.x >= Game_Config.BOARD_WIDTH//2:
+            self.x -= 1
+
 
 class Tetris:
 
@@ -63,9 +86,10 @@ class Tetris:
     attempt_hold = False
 
     def __init__(self):
-        self.height = Game_Config.BOARD_HEIGHT
+        self.bound = 0
+        self.height = Game_Config.BOARD_HEIGHT+self.bound
         self.width = Game_Config.BOARD_WIDTH
-        self.field= [ ['0'] * self.width for i in range(self.height) ]
+        self.field= [ [Game_Config.BLANK] * self.width for i in range(self.height) ]
         self.time_count = 0
         self.lines_count = 0
         self.state = 'start'
@@ -92,7 +116,7 @@ class Tetris:
                     if i + self.figure.y > self.height - 1 or \
                             j + self.figure.x > self.width - 1 or \
                             j + self.figure.x < 0 or \
-                            self.field[i + self.figure.y][j + self.figure.x] != '0':
+                            self.field[i + self.figure.y][j + self.figure.x] != Game_Config.BLANK:
                         return True
         return False
 
@@ -112,7 +136,7 @@ class Tetris:
         for i in range(0, self.height):
             blanks = 0
             for j in range(self.width):
-                if self.field[i][j] == '0':
+                if self.field[i][j] == Game_Config.BLANK:
                     blanks += 1
             if blanks == 0:
                 lines += 1
@@ -127,6 +151,9 @@ class Tetris:
         while self.figure.right_edge()+self.figure.x >= self.width:
             self.move(-1)
 
+    def vertical_edge_guard(self):
+        while self.figure.bottom_edge()+self.figure.x < 0:
+            self.figure.y -= 1
 
     def hard_drop(self):
         while not self.intersects():

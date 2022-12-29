@@ -14,8 +14,8 @@ import keyboard_input
 CUBE_LENGTH = 30
 WINDOW_X = 900
 WINDOW_Y = 740
-WINDOW_MIN_Y = CUBE_LENGTH*22
-WINDOW_MIN_X = CUBE_LENGTH*12
+WINDOW_MIN_Y = CUBE_LENGTH*(Game_Config.BOARD_HEIGHT+1)
+WINDOW_MIN_X = CUBE_LENGTH*(Game_Config.BOARD_WIDTH+2)
 #------------------------------------------
 
 workingDir = os.path.dirname( os.path.realpath( __file__ ) )
@@ -68,6 +68,8 @@ key_hard_drop = SPACE
 key_hold = LSHIFT
 
 start_interval = end_interval = 0
+start_increase = end_increase = 0
+increase_interval = 30
 interval = 2
 
 
@@ -142,22 +144,29 @@ def generate_board(width, height, screen_x, screen_y, field, figure, batch=None)
         for i in range(width):
             if (i, row) in figure_coord:
                 block = cube_image[figure.type]
-                yPos = (screen_y - CUBE_LENGTH*height)/2 + CUBE_LENGTH * row
-                xPos = (screen_x - CUBE_LENGTH*width)/2 + CUBE_LENGTH * i
+                y_pos = (screen_y - CUBE_LENGTH*(height))/2 + CUBE_LENGTH * row + (CUBE_LENGTH*(1/2)*(1-(screen_y-WINDOW_MIN_Y)/(WINDOW_Y-WINDOW_MIN_Y)))
+                x_pos = (screen_x - CUBE_LENGTH*width)/2 + CUBE_LENGTH * i
                 board.append(pyglet.sprite.Sprite(img=block
-                                        , x=xPos
-                                        , y=yPos
+                                        , x=x_pos
+                                        , y=y_pos
                                         , batch=batch))
             symbol = field[height - 1 - row][i]
-            if symbol != '0':
+            if symbol != Game_Config.BLANK:
                 block = cube_image[symbol]
-                yPos = (screen_y - CUBE_LENGTH*height)/2 + CUBE_LENGTH * row
-                xPos = (screen_x - CUBE_LENGTH*width)/2 + CUBE_LENGTH * i
+                y_pos = (screen_y - CUBE_LENGTH*(height))/2 + CUBE_LENGTH * row + (CUBE_LENGTH*(1/2)*(1-(screen_y-WINDOW_MIN_Y)/(WINDOW_Y-WINDOW_MIN_Y)))
+                x_pos = (screen_x - CUBE_LENGTH*width)/2 + CUBE_LENGTH * i
                 board.append(pyglet.sprite.Sprite(img=block
-                                        , x=xPos
-                                        , y=yPos
+                                        , x=x_pos
+                                        , y=y_pos
                                         , batch=batch))
     return board
+
+def generate_hold(width, height, screen_x, screen_y, figure, batch=None):
+    hold = []
+    figure_coord = []
+    for n in figure.matrix():
+        figure_coord.append((n%4, n//4))
+    return hold
 
 key_state = key_state_old = set()
 
@@ -223,7 +232,7 @@ class GameScreen(pyglet.window.Window):
         lcl = lines_cleared_label
         lcl.text = 'LINES CLEARED'
         lcl.x=self.width/2 - ((Game_Config.BOARD_WIDTH+2)*CUBE_LENGTH)/2 - 10
-        lcl.y=(self.height - (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 + (150*(self.height/WINDOW_Y))  #(Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH - 480
+        lcl.y=(self.height - (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 + (150*(self.height/WINDOW_Y))
         lcl.draw()
 
         global time_elapsed_label
@@ -324,40 +333,49 @@ class GameScreen(pyglet.window.Window):
 def move_objects(dt, screen):
 
     global key_state, key_state_old, pause, key_move_left, key_move_right, key_rotate_clock, key_rotate_cntrclock, key_move_down, key_hard_drop
-    global start_interval, end_interval, interval
+    global start_interval, end_interval, interval, start_increase, end_increase
 
     if key( ESCAPE ) and not key_old( ESCAPE ):
         pause = not pause
 
-    end_interval = screen.time
+    end_interval = end_increase = screen.time
 
     if screen.tetris.state == 'start':
 
-        if end_interval-start_interval >= 2:
-            print(f"{end_interval-start_interval:.2f} - descend piece")
-            screen.tetris.descend()
-            start_interval = end_interval
-
-        if key( key_hold ) and not key_old( key_hold ):
-            screen.tetris.hold()
-
-        if key( key_move_left ) and not key_old( key_move_left ):
-            screen.tetris.move(-1)
-
-        if key( key_move_right ) and not key_old( key_move_right ):
-            screen.tetris.move(1)
-
-        if key( key_rotate_clock ) and not key_old( key_rotate_clock ):
-            screen.tetris.rotate('clock')
-
-        if key( key_rotate_cntrclock ) and not key_old( key_rotate_cntrclock ):
-            screen.tetris.rotate('counter')
+        global increase_interval
 
         if key( key_move_down ) and not key_old( key_move_down ):
             screen.tetris.descend()
 
         if key( key_hard_drop ) and not key_old( key_hard_drop ):
             screen.tetris.hard_drop()
+            
+        if key( key_hold ) and not key_old( key_hold ):
+            screen.tetris.hold()
+            
+        if key( key_move_left ) and not key_old( key_move_left ):
+            screen.tetris.move(-1)
+
+        if key( key_move_right ) and not key_old( key_move_right ):
+            screen.tetris.move(1)
+        
+        if key( key_rotate_clock ) and not key_old( key_rotate_clock ):
+            screen.tetris.rotate('clock')
+            start_interval += interval*0.05
+
+        if key( key_rotate_cntrclock ) and not key_old( key_rotate_cntrclock ):
+            screen.tetris.rotate('counter')
+            start_interval += interval*0.05
+
+        if end_increase-start_increase >= increase_interval:
+            interval *= 0.92
+            increase_interval *= 0.90
+            start_increase = end_increase
+            
+        if (end_interval-start_interval >= interval) and not (key( key_move_down ) or key( key_hard_drop )):
+            # print(f"{end_interval-start_interval:.2f} - descend piece")
+            screen.tetris.descend()
+            start_interval = end_interval
 
     key_state_old = key_state.copy()
 
