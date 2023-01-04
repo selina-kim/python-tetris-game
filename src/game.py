@@ -40,7 +40,7 @@ Cousine = font.load('Cousine', bold=True, italic=True)
 main_font = 'Cousine'
 
 cubes = resource.image('cubes.png')
-cubes_seq = pyglet.image.ImageGrid(cubes, 1, 8)
+cubes_seq = pyglet.image.ImageGrid(cubes, 1, 9)
 
 cube_red = cubes_seq[0]
 cube_orange = cubes_seq[1]
@@ -50,6 +50,7 @@ cube_skyblue = cubes_seq[4]
 cube_blue = cubes_seq[5]
 cube_purple = cubes_seq[6]
 cube_grey = cubes_seq[7]
+cube_ghost = cubes_seq[8]
 
 pause = False
 lines_count_draw = False
@@ -137,31 +138,35 @@ cube_image = {
     'O': cube_yellow
 }
 
-def generate_board(width, height, screen_x, screen_y, field, bound, figure, batch=None):
+def generate_board(width, height, screen_x, screen_y, field, bound, figure, shadow, batch=None):
     board = []
     figure_coord = []
+    shadow_coord = []
     full_height = height + bound
     for n in figure.matrix():
         figure_coord.append((figure.x + n % 4, full_height - 1 - (figure.y + n // 4)))
+        shadow_coord.append((shadow.x + n % 4, full_height - 1 - (shadow.y + n // 4)))
     for row in range(full_height):
         for i in range(width):
             symbol = field[full_height - 1 - row][i]
-            if (i, row) in figure_coord and symbol == Game_Config.BLANK:
-                block = cube_image[figure.type]
+            symbol_image = None
+            if symbol == Game_Config.BLANK:
+                if (i, row) in figure_coord:
+                    symbol_image = cube_image[figure.type]
+                elif (i, row) in shadow_coord:
+                    symbol_image = cube_ghost
+            else:
+                symbol_image = cube_image[symbol]
+            if symbol_image != None:
                 y_pos = (screen_y - CUBE_LENGTH*(height))/2 + CUBE_LENGTH * row + (CUBE_LENGTH*(1/2)*(1-(screen_y-WINDOW_MIN_Y)/(WINDOW_Y-WINDOW_MIN_Y)))
                 x_pos = (screen_x - CUBE_LENGTH*width)/2 + CUBE_LENGTH * i
-                board.append(pyglet.sprite.Sprite(img=block
+                temp = pyglet.sprite.Sprite(img=symbol_image
                                         , x=x_pos
                                         , y=y_pos
-                                        , batch=batch))
-            if symbol != Game_Config.BLANK:
-                block = cube_image[symbol]
-                y_pos = (screen_y - CUBE_LENGTH*(height))/2 + CUBE_LENGTH * row + (CUBE_LENGTH*(1/2)*(1-(screen_y-WINDOW_MIN_Y)/(WINDOW_Y-WINDOW_MIN_Y)))
-                x_pos = (screen_x - CUBE_LENGTH*width)/2 + CUBE_LENGTH * i
-                board.append(pyglet.sprite.Sprite(img=block
-                                        , x=x_pos
-                                        , y=y_pos
-                                        , batch=batch))
+                                        , batch=batch)
+                if symbol_image == cube_ghost:
+                    temp.opacity = 128
+                board.append(temp)
     return board
 
 def generate_hold(width, height, screen_x, screen_y, figure, batch=None):
@@ -211,6 +216,7 @@ class GameScreen(pyglet.window.Window):
             , self.tetris.field
             , self.tetris.bound
             , self.tetris.figure
+            , self.tetris.shadow
             , self.batch
         )
 
@@ -230,6 +236,7 @@ class GameScreen(pyglet.window.Window):
             , self.tetris.field
             , self.tetris.bound
             , self.tetris.figure
+            , self.tetris.shadow
             , self.batch
         )
 
@@ -386,10 +393,10 @@ def move_objects(dt, screen):
             increase_interval *= 0.90
             start_increase = end_increase
             
-        # if (end_interval-start_interval >= interval) and not (key( key_move_down ) or key( key_hard_drop )):
-        #     # print(f"{end_interval-start_interval:.2f} - descend piece")
-        #     screen.tetris.descend()
-        #     start_interval = end_interval
+        if (end_interval-start_interval >= interval) and not (key( key_move_down ) or key( key_hard_drop )):
+            # print(f"{end_interval-start_interval:.2f} - descend piece")
+            screen.tetris.descend()
+            start_interval = end_interval
     else:
         if key( key_restart ) and not key_old( key_restart ):
             screen.restart()
