@@ -86,7 +86,7 @@ class Tetris:
     attempt_hold = False
 
     def __init__(self):
-        self.bound = 0
+        self.bound = 3
         self.height = Game_Config.BOARD_HEIGHT+self.bound
         self.width = Game_Config.BOARD_WIDTH
         self.field= [ [Game_Config.BLANK] * self.width for i in range(self.height) ]

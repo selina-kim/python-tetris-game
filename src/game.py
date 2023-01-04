@@ -136,14 +136,16 @@ cube_image = {
     'O': cube_yellow
 }
 
-def generate_board(width, height, screen_x, screen_y, field, figure, batch=None):
+def generate_board(width, height, screen_x, screen_y, field, bound, figure, batch=None):
     board = []
     figure_coord = []
+    full_height = height + bound
     for n in figure.matrix():
-        figure_coord.append((figure.x + n % 4, height - 1 - (figure.y + n // 4)))
-    for row in range(height):
+        figure_coord.append((figure.x + n % 4, full_height - 1 - (figure.y + n // 4)))
+    for row in range(full_height):
         for i in range(width):
-            if (i, row) in figure_coord:
+            symbol = field[full_height - 1 - row][i]
+            if (i, row) in figure_coord and symbol == Game_Config.BLANK:
                 block = cube_image[figure.type]
                 y_pos = (screen_y - CUBE_LENGTH*(height))/2 + CUBE_LENGTH * row + (CUBE_LENGTH*(1/2)*(1-(screen_y-WINDOW_MIN_Y)/(WINDOW_Y-WINDOW_MIN_Y)))
                 x_pos = (screen_x - CUBE_LENGTH*width)/2 + CUBE_LENGTH * i
@@ -151,7 +153,6 @@ def generate_board(width, height, screen_x, screen_y, field, figure, batch=None)
                                         , x=x_pos
                                         , y=y_pos
                                         , batch=batch))
-            symbol = field[height - 1 - row][i]
             if symbol != Game_Config.BLANK:
                 block = cube_image[symbol]
                 y_pos = (screen_y - CUBE_LENGTH*(height))/2 + CUBE_LENGTH * row + (CUBE_LENGTH*(1/2)*(1-(screen_y-WINDOW_MIN_Y)/(WINDOW_Y-WINDOW_MIN_Y)))
@@ -207,6 +208,7 @@ class GameScreen(pyglet.window.Window):
             , self.width
             , self.height
             , self.tetris.field
+            , self.tetris.bound
             , self.tetris.figure
             , self.batch
         )
@@ -225,6 +227,7 @@ class GameScreen(pyglet.window.Window):
             , self.width
             , self.height
             , self.tetris.field
+            , self.tetris.bound
             , self.tetris.figure
             , self.batch
         )
@@ -331,6 +334,8 @@ class GameScreen(pyglet.window.Window):
         key_state.discard( symbol )
 
     def restart(self):
+        global pause
+        pause = False
         self.tetris = Tetris()
         self.time = self.max_time = 0
         self.line_count = self.tetris.lines_count
@@ -353,6 +358,7 @@ def move_objects(dt, screen):
 
         if key( key_move_down ) and not key_old( key_move_down ):
             screen.tetris.descend()
+            start_interval += interval*0.05
 
         if key( key_hard_drop ) and not key_old( key_hard_drop ):
             screen.tetris.hard_drop()
@@ -383,9 +389,10 @@ def move_objects(dt, screen):
             # print(f"{end_interval-start_interval:.2f} - descend piece")
             screen.tetris.descend()
             start_interval = end_interval
-
-    if key( key_restart ) and not key_old( key_restart ):
-        screen.restart()
+    else:
+        if key( key_restart ) and not key_old( key_restart ):
+            screen.restart()
+            start_interval = start_increase = screen.time
 
     key_state_old = key_state.copy()
 
