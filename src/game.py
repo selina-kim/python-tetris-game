@@ -67,6 +67,7 @@ key_move_down = SEMICOLON
 key_hard_drop = SPACE
 key_hold = LSHIFT
 key_restart = RETURN
+key_pause = BACKSPACE
 
 start_interval = end_interval = 0
 start_increase = end_increase = 0
@@ -347,7 +348,7 @@ def move_objects(dt, screen):
     global key_state, key_state_old, pause, key_move_left, key_move_right, key_rotate_clock, key_rotate_cntrclock, key_move_down, key_hard_drop, key_restart
     global start_interval, end_interval, interval, start_increase, end_increase
 
-    if key( ESCAPE ) and not key_old( ESCAPE ):
+    if key( key_pause ) and not key_old( key_pause ):
         pause = not pause
 
     end_interval = end_increase = screen.time
@@ -385,10 +386,10 @@ def move_objects(dt, screen):
             increase_interval *= 0.90
             start_increase = end_increase
             
-        if (end_interval-start_interval >= interval) and not (key( key_move_down ) or key( key_hard_drop )):
-            # print(f"{end_interval-start_interval:.2f} - descend piece")
-            screen.tetris.descend()
-            start_interval = end_interval
+        # if (end_interval-start_interval >= interval) and not (key( key_move_down ) or key( key_hard_drop )):
+        #     # print(f"{end_interval-start_interval:.2f} - descend piece")
+        #     screen.tetris.descend()
+        #     start_interval = end_interval
     else:
         if key( key_restart ) and not key_old( key_restart ):
             screen.restart()

@@ -60,14 +60,14 @@ class Figure:
     def top_edge(self):
         top_most = 3
         for n in self.matrix():
-            if n//4 > top_most:
+            if n//4 < top_most:
                 top_most = n//4
         return top_most
 
     def bottom_edge(self):
         bottom_most = 0
         for n in self.matrix():
-            if n//4 < bottom_most:
+            if n//4 > bottom_most:
                 bottom_most = n//4
         return bottom_most
 
@@ -99,6 +99,9 @@ class Tetris:
 
     def new_figure(self):
         self.figure = Figure(self.spoiler.pop(0))
+        while self.figure.bottom_edge()+self.figure.y < self.bound - 1:
+            self.figure.y += 1
+        self.vertical_edge_guard()
         if len(self.spoiler) == 4:
             self.fill_spoiler()
 
@@ -128,8 +131,15 @@ class Tetris:
         self.clear_lines()
         self.attempt_hold = False
         self.new_figure()
-        if self.intersects():
+        if self.intersects() or not self.top_empty():
             self.state = 'gameover'
+
+    def top_empty(self):
+        for i in range(3):
+            for j in range(self.width):
+                if self.field[i][j] != Game_Config.BLANK:
+                    return False
+        return True
 
     def clear_lines(self):
         lines = 0
@@ -152,8 +162,11 @@ class Tetris:
             self.move(-1)
 
     def vertical_edge_guard(self):
-        while self.figure.bottom_edge()+self.figure.x < 0:
-            self.figure.y -= 1
+        for i in range(4):
+            for j in range(4):
+                if i * 4 + j in self.figure.matrix():
+                    if self.field[i + self.figure.y][j + self.figure.x] != Game_Config.BLANK and self.figure.bottom_edge()+self.figure.y > 0:
+                        self.figure.y -= 1
 
     def hard_drop(self):
         while not self.intersects():
