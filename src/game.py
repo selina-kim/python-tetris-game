@@ -179,10 +179,7 @@ def generate_hold(width, height, screen_x, screen_y, figure, exist, batch=None):
     hold = []
     if exist:
         for n in figure.matrix():
-            print(figure.top_edge())
-            print(n//4)
             row = (n//4 - figure.top_edge())
-            print(row)
             col = figure.right_edge() - n%4
             x_pos = (screen_x - CUBE_LENGTH*width)/2 - CUBE_LENGTH * (2 + col) - 10
             y_pos = screen_y - (screen_y - CUBE_LENGTH*(height))/2 - CUBE_LENGTH * (3 + row)
@@ -191,8 +188,6 @@ def generate_hold(width, height, screen_x, screen_y, figure, exist, batch=None):
                                         , x=x_pos
                                         , y=y_pos
                                         , batch=batch))
-        # print(figure_coord)
-        # print(figure.right_edge())
     return hold
 
 key_state = key_state_old = set()
