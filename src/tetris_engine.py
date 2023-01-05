@@ -162,15 +162,11 @@ class Tetris:
         self.clear_lines()
         self.attempt_hold = False
         self.new_figure()
-        if self.intersects(self.figure) or not self.top_empty():
+        if self.intersects(self.figure):
+            while self.vertical_intersects(self.figure):
+                self.figure.y -= 1
+            self.draw_shadow()
             self.state = 'gameover'
-
-    def top_empty(self):
-        for i in range(self.bound):
-            for j in range(self.width):
-                if self.field[i][j] != Game_Config.BLANK:
-                    return False
-        return True
 
     def clear_lines(self):
         lines = 0
@@ -243,3 +239,9 @@ class Tetris:
             self.horizontal_edge_guard()
             self.draw_shadow()
             self.attempt_hold = True
+
+    def is_hold(self):
+        if self.hold_piece == None:
+            return False
+        else:
+            return True

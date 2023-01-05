@@ -40,7 +40,7 @@ Cousine = font.load('Cousine', bold=True, italic=True)
 main_font = 'Cousine'
 
 cubes = resource.image('cubes.png')
-cubes_seq = pyglet.image.ImageGrid(cubes, 1, 9)
+cubes_seq = pyglet.image.ImageGrid(cubes, 1, 9, item_width=CUBE_LENGTH)
 
 cube_red = cubes_seq[0]
 cube_orange = cubes_seq[1]
@@ -94,6 +94,11 @@ time_elapsed_label = pyglet.text.Label(
 time_label = pyglet.text.Label(
                         font_name=main_font,
                         font_size=24, bold=True,
+                        anchor_x='right', anchor_y='center')
+
+hold_label = pyglet.text.Label(
+                        font_name=main_font,
+                        font_size=14,
                         anchor_x='right', anchor_y='center')
 
 state_label = pyglet.text.Label(
@@ -169,11 +174,24 @@ def generate_board(width, height, screen_x, screen_y, field, bound, figure, shad
                 board.append(temp)
     return board
 
-def generate_hold(width, height, screen_x, screen_y, figure, batch=None):
+def generate_hold(width, height, screen_x, screen_y, figure, exist, batch=None):
     hold = []
-    figure_coord = []
-    for n in figure.matrix():
-        figure_coord.append((n%4, n//4))
+    if exist:
+        for n in figure.matrix():
+            print(figure.top_edge())
+            print(n//4)
+            row = (n//4 - figure.top_edge())
+            print(row)
+            col = figure.right_edge() - n%4
+            x_pos = (screen_x - CUBE_LENGTH*width)/2 - CUBE_LENGTH * (2 + col) - 10
+            y_pos = screen_y - (screen_y - CUBE_LENGTH*(height))/2 - CUBE_LENGTH * (3 + row)
+            hold.append(
+                    pyglet.sprite.Sprite(img=cube_image[figure.type]
+                                        , x=x_pos
+                                        , y=y_pos
+                                        , batch=batch))
+        # print(figure_coord)
+        # print(figure.right_edge())
     return hold
 
 key_state = key_state_old = set()
@@ -219,6 +237,15 @@ class GameScreen(pyglet.window.Window):
             , self.tetris.shadow
             , self.batch
         )
+        self.game_hold = generate_hold(
+            Game_Config.BOARD_WIDTH
+            , Game_Config.BOARD_HEIGHT
+            , self.width
+            , self.height
+            , self.tetris.hold_piece
+            , self.tetris.is_hold()
+            , self.batch
+            )
 
     def on_draw(self):
         self.clear()
@@ -239,6 +266,15 @@ class GameScreen(pyglet.window.Window):
             , self.tetris.shadow
             , self.batch
         )
+        self.game_hold = generate_hold(
+            Game_Config.BOARD_WIDTH
+            , Game_Config.BOARD_HEIGHT
+            , self.width
+            , self.height
+            , self.tetris.hold_piece
+            , self.tetris.is_hold()
+            , self.batch
+            )
 
         global lines_cleared_label
         lcl = lines_cleared_label
@@ -254,6 +290,13 @@ class GameScreen(pyglet.window.Window):
         tel.y=(self.height - (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 + (70*(self.height/WINDOW_Y))
         tel.draw()
 
+        global hold_label
+        hl = hold_label
+        hl.text = 'HOLD'
+        hl.x=self.width//2 - (6*CUBE_LENGTH) - 10
+        hl.y=(self.height + (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 - (70*(self.height/WINDOW_Y))
+        hl.draw()
+
         global lines_count_draw
         lcol = lines_count_label
         self.line_count = self.tetris.lines_count
@@ -263,7 +306,7 @@ class GameScreen(pyglet.window.Window):
         lcol.draw()
 
         if dev_mode:
-            global fps_draw, key_draw, current_figure_draw
+            global fps_draw, key_draw, current_figure_draw, current_orientation_draw
             fps_draw = True
             key_draw = True
             current_figure_draw = True
