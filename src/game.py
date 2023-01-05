@@ -69,6 +69,7 @@ key_hard_drop = SPACE
 key_hold = LSHIFT
 key_restart = RETURN
 key_pause = BACKSPACE
+key_dev = QUOTELEFT
 
 start_interval = end_interval = 0
 start_increase = end_increase = 0
@@ -216,6 +217,7 @@ class GameScreen(pyglet.window.Window):
         self.time = 0
         self.max_time = 0
         self.batch = pyglet.graphics.Batch()
+        self.dev_batch = pyglet.graphics.Batch()
         self.fps = 0
         self.set_minimum_size(WINDOW_MIN_X, WINDOW_MIN_Y)
         self.set_icon(cube_purple)
@@ -305,12 +307,9 @@ class GameScreen(pyglet.window.Window):
         lcol.y=(self.height - (Game_Config.BOARD_HEIGHT+2)*CUBE_LENGTH)/2 + (120*(self.height/WINDOW_Y))
         lcol.draw()
 
-        if dev_mode:
-            global fps_draw, key_draw, current_figure_draw, current_orientation_draw
-            fps_draw = True
-            key_draw = True
-            current_figure_draw = True
-            current_orientation_draw = True
+        global fps_draw, key_draw, current_figure_draw, current_orientation_draw
+
+        fps_draw = key_draw = current_figure_draw = current_orientation_draw = dev_mode
 
         if current_figure_draw:
             cfl = current_figure_label
@@ -318,7 +317,7 @@ class GameScreen(pyglet.window.Window):
             cfl.font_size = 20
             cfl.bold = True
             cfl.x, cfl.y = self.width-10, self.height-5
-            cfl.batch = self.batch
+            cfl.batch = self.dev_batch
 
         if current_orientation_draw:
             col = current_orientation_label
@@ -326,14 +325,14 @@ class GameScreen(pyglet.window.Window):
             col.font_size = 20
             col.bold = True
             col.x, col.y = self.width-10, self.height-30
-            col.batch = self.batch
+            col.batch = self.dev_batch
 
         if fps_draw:
             fl = fps_label
             fl.text = f'{self.fps:.1f} FPS'
             fl.font_size = 10
             fl.x, fl.y = 5, self.height-5
-            fl.batch = self.batch
+            fl.batch = self.dev_batch
 
         if key_draw:
             kl = key_label
@@ -343,7 +342,10 @@ class GameScreen(pyglet.window.Window):
                 kl.text = f'Key:'
             kl.font_size = 10
             kl.x, kl.y = 5, self.height-20
-            kl.batch = self.batch
+            kl.batch = self.dev_batch
+
+        if dev_mode:
+            self.dev_batch.draw()
 
         self.batch.draw()
 
@@ -395,8 +397,11 @@ class GameScreen(pyglet.window.Window):
 
 def move_objects(dt, screen):
 
-    global key_state, key_state_old, pause, key_move_left, key_move_right, key_rotate_clock, key_rotate_cntrclock, key_move_down, key_hard_drop, key_restart
+    global dev_mode, key_dev, key_state, key_state_old, pause, key_move_left, key_move_right, key_rotate_clock, key_rotate_cntrclock, key_move_down, key_hard_drop, key_restart
     global start_interval, end_interval, interval, start_increase, end_increase
+
+    if key ( key_dev ) and not key_old( key_dev ):
+        dev_mode = not dev_mode
 
     if key( key_pause ) and not key_old( key_pause ):
         pause = not pause
@@ -448,8 +453,6 @@ def move_objects(dt, screen):
     key_state_old = key_state.copy()
 
 def run():
-    global dev_mode
-    dev_mode = True
     screen = GameScreen(WINDOW_Y, WINDOW_X)
     pyglet.clock.schedule_interval(screen.update, 1/60)
     pyglet.clock.schedule(move_objects, screen)
