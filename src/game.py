@@ -165,7 +165,7 @@ def generate_board(width, height, screen_x, screen_y, field, bound, figure, shad
                                         , y=y_pos
                                         , batch=batch)
                 if symbol_image == cube_ghost:
-                    temp.opacity = 128
+                    temp.opacity = 160
                 board.append(temp)
     return board
 

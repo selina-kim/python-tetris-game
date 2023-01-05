@@ -89,7 +89,7 @@ class Tetris:
     attempt_hold = False
 
     def __init__(self):
-        self.bound = 3
+        self.bound = 4
         self.height = Game_Config.BOARD_HEIGHT+self.bound
         self.width = Game_Config.BOARD_WIDTH
         self.field= [ [Game_Config.BLANK] * self.width for i in range(self.height) ]
@@ -105,10 +105,7 @@ class Tetris:
     def new_figure(self):
         self.figure = Figure(self.spoiler.pop(0))
         self.shadow = self.figure.copy()
-        while self.figure.bottom_edge()+self.figure.y < self.bound - 1:
-            self.figure.y += 1
-        if self.vertical_intersects(self.figure):
-            self.figure.y -= 1
+        self.set_spawn_height()
         self.draw_shadow()
         if len(self.spoiler) == 4:
             self.fill_spoiler()
@@ -119,6 +116,12 @@ class Tetris:
             temp.append(key)
         random.shuffle(temp)
         self.spoiler.extend(temp)
+    
+    def set_spawn_height(self):
+        while self.figure.bottom_edge()+self.figure.y < self.bound - 1:
+            self.figure.y += 1
+        if self.vertical_intersects(self.figure):
+            self.figure.y -= 1
 
     def draw_shadow(self):
         change = False
@@ -126,10 +129,9 @@ class Tetris:
         self.shadow.x = self.figure.x
         self.shadow.rot = self.figure.rot
         self.shadow.type = self.figure.type
-        for i in range(self.shadow.bottom_edge()+self.shadow.y, self.height):
-            if not self.vertical_intersects(self.shadow):
-                self.shadow.y += 1
-                change = True
+        while not self.intersects(self.shadow):
+            self.shadow.y += 1
+            change = True
         if change:
             self.shadow.y -= 1
 
@@ -141,14 +143,14 @@ class Tetris:
                         return True
         return False
 
-    def intersects(self):
+    def intersects(self,fig):
         for i in range(4):
             for j in range(4):
-                if i * 4 + j in self.figure.matrix():
-                    if i + self.figure.y > self.height - 1 or \
-                            j + self.figure.x > self.width - 1 or \
-                            j + self.figure.x < 0 or \
-                            self.field[i + self.figure.y][j + self.figure.x] != Game_Config.BLANK:
+                if i * 4 + j in fig.matrix():
+                    if i + fig.y > self.height - 1 or \
+                            j + fig.x > self.width - 1 or \
+                            j + fig.x < 0 or \
+                            self.field[i + fig.y][j + fig.x] != Game_Config.BLANK:
                         return True
         return False
 
@@ -160,11 +162,11 @@ class Tetris:
         self.clear_lines()
         self.attempt_hold = False
         self.new_figure()
-        if self.intersects() or not self.top_empty():
+        if self.intersects(self.figure) or not self.top_empty():
             self.state = 'gameover'
 
     def top_empty(self):
-        for i in range(3):
+        for i in range(self.bound):
             for j in range(self.width):
                 if self.field[i][j] != Game_Config.BLANK:
                     return False
@@ -186,19 +188,19 @@ class Tetris:
 
     def horizontal_edge_guard(self):
         while self.figure.left_edge()+self.figure.x < 0:
-                self.move(1)
+            self.figure.x += 1
         while self.figure.right_edge()+self.figure.x >= self.width:
-            self.move(-1)
+            self.figure.x -= 1
 
     def hard_drop(self):
-        while not self.intersects():
+        while not self.intersects(self.figure):
             self.figure.y += 1
         self.figure.y -= 1
         self.freeze()
 
     def descend(self):
         self.figure.y += 1
-        if self.intersects():
+        if self.intersects(self.figure):
             self.figure.y -= 1
             self.freeze()
         self.draw_shadow()
@@ -206,7 +208,7 @@ class Tetris:
     def move(self, dx):
         old_x = self.figure.x
         self.figure.x += dx
-        if self.intersects():
+        if self.intersects(self.figure):
             self.figure.x = old_x
         self.draw_shadow()
             
@@ -217,8 +219,11 @@ class Tetris:
         else:
             self.figure.rotate_cntr_clock()
         self.horizontal_edge_guard()
-        if self.intersects():
+        if self.intersects(self.figure):
+            self.figure.y += 1
+        if self.intersects(self.figure):
             self.figure.rot = old_rotation
+            self.figure -= 1
             self.horizontal_edge_guard()
         self.draw_shadow()
 
@@ -232,7 +237,9 @@ class Tetris:
                 old_hold_piece = self.hold_piece
                 self.hold_piece = self.figure
                 self.figure = old_hold_piece
-            self.figure.x, self.figure.y = current_pos_x, 0
+            self.hold_piece.rot = 0
+            self.figure.x = current_pos_x
+            self.set_spawn_height()
             self.horizontal_edge_guard()
             self.draw_shadow()
             self.attempt_hold = True
