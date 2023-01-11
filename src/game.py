@@ -60,11 +60,11 @@ key_draw = False
 current_figure_draw = False
 current_orientation_draw = False
 
-key_move_left = L
-key_move_right = APOSTROPHE
-key_rotate_clock = P
-key_rotate_cntrclock = O
-key_move_down = SEMICOLON
+key_move_left = LEFT
+key_move_right = RIGHT
+key_rotate_clock = UP
+key_rotate_cntrclock = Z
+key_move_down = DOWN
 key_hard_drop = SPACE
 key_hold = LSHIFT
 key_restart = RETURN
