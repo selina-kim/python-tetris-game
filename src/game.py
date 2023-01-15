@@ -382,11 +382,13 @@ class GameScreen(pyglet.window.Window):
         key_state.discard( symbol )
 
     def restart(self):
-        global pause
+        global pause, increase_interval, interval
         pause = False
         self.tetris = Tetris()
         self.time = self.max_time = 0
         self.line_count = self.tetris.lines_count
+        increase_interval = 30
+        interval = 2
 
 
 
