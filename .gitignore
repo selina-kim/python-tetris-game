@@ -3,3 +3,5 @@
 assets/img/misc/
 ref/
 assets/font/other-fonts
+build/
+*.spec

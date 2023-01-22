@@ -19,7 +19,13 @@ WINDOW_MIN_X = CUBE_LENGTH*(Game_Config.BOARD_WIDTH+2)
 #------------------------------------------
 
 workingDir = os.path.dirname( os.path.realpath( __file__ ) )
-resource.path = [ os.path.join( workingDir, '../assets/font' ), os.path.join( workingDir, '../assets/img' ) ]
+
+# replaced relative path with absolute path because of errors when building in pyinstaller
+resource.path = [
+    '/Users/selinakim/Selina Mac Files/Code/Personal Projects/python-tetris-game/assets/font',
+    '/Users/selinakim/Selina Mac Files/Code/Personal Projects/python-tetris-game/assets/img'
+]
+# resource.path = [ os.path.join( workingDir, '../assets/font' ), os.path.join( workingDir, '../assets/img' ) ]
 resource.reindex()
 
 resource.add_font('ShareTechMono-Regular.ttf')
