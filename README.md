@@ -2,7 +2,7 @@
 Tetris game developed with python and pyglet library. All graphics used in game and demo video are self-created.
 
 ### Run
-**macOS**: Run the 'main' file in the 'src' directory.
+**macOS**: Run the `main` file in the `src` directory.
 
 ### Demo Video
 https://user-images.githubusercontent.com/95239801/212843126-dc4d2793-1954-4295-9bd5-d9779408ba67.mp4
